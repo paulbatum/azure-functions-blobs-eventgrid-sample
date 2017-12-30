@@ -7,6 +7,7 @@ namespace FuncBlobs.Models
 {
     public class ThermostatLog
     {
+        public string Id { get; set; }
         public Guid DeviceId { get; set; }
         public DateTimeOffset LogTimestamp { get; set; }   
         public List<ThermostatReading> Readings { get; set; }
@@ -22,6 +23,7 @@ namespace FuncBlobs.Models
 
             return new ThermostatLog
             {
+                Id = fileIdentifier,
                 LogTimestamp = DateTimeOffset.ParseExact(components[0], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal),
                 DeviceId = Guid.Parse(components[1])
             };

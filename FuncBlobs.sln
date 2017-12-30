@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FuncBlobs.EventWriter", "FuncBlobs.EventWriter\FuncBlobs.EventWriter.csproj", "{14B5BE7F-A51E-49C8-9801-DA02B389DBCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncBlobs.Models", "FuncBlobs.Models\FuncBlobs.Models.csproj", "{D43DADE0-BB6E-4D13-8B5A-6FA2640CA45E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FuncBlobs.Models", "FuncBlobs.Models\FuncBlobs.Models.csproj", "{D43DADE0-BB6E-4D13-8B5A-6FA2640CA45E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncBlobs.Csv", "FuncBlobs.Csv\FuncBlobs.Csv.csproj", "{EE735B70-74A5-4561-8FC3-3E976EA7D8F2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FuncBlobs.Scratch", "FuncBlobs.Scratch\FuncBlobs.Scratch.csproj", "{A5B5ED84-CE67-4C92-80E0-4FC30E170479}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncBlobs.Scratch", "FuncBlobs.Scratch\FuncBlobs.Scratch.csproj", "{A5B5ED84-CE67-4C92-80E0-4FC30E170479}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FuncBlobs.Formats", "FuncBlobs.Formats\FuncBlobs.Formats.csproj", "{16956C2A-A559-4EE5-9849-FE3F66B8654C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +25,14 @@ Global
 		{D43DADE0-BB6E-4D13-8B5A-6FA2640CA45E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D43DADE0-BB6E-4D13-8B5A-6FA2640CA45E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D43DADE0-BB6E-4D13-8B5A-6FA2640CA45E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE735B70-74A5-4561-8FC3-3E976EA7D8F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE735B70-74A5-4561-8FC3-3E976EA7D8F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE735B70-74A5-4561-8FC3-3E976EA7D8F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE735B70-74A5-4561-8FC3-3E976EA7D8F2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A5B5ED84-CE67-4C92-80E0-4FC30E170479}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A5B5ED84-CE67-4C92-80E0-4FC30E170479}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5B5ED84-CE67-4C92-80E0-4FC30E170479}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5B5ED84-CE67-4C92-80E0-4FC30E170479}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16956C2A-A559-4EE5-9849-FE3F66B8654C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16956C2A-A559-4EE5-9849-FE3F66B8654C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16956C2A-A559-4EE5-9849-FE3F66B8654C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16956C2A-A559-4EE5-9849-FE3F66B8654C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

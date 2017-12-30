@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FuncBlobs.Csv\FuncBlobs.Csv.csproj" />
+    <ProjectReference Include="..\FuncBlobs.Formats\FuncBlobs.Formats.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using FuncBlobs.Models;
 
-namespace FuncBlobs.Csv
+namespace FuncBlobs.Formats
 {
     public class CsvUtils
     {
@@ -15,11 +15,12 @@ namespace FuncBlobs.Csv
 
         public CsvUtils()
         {
-            var dateTimeOffsetOptions = new TypeConverterOptions {                               
+            var dateTimeOffsetOptions = new TypeConverterOptions
+            {
                 Formats = new string[] { "u" }
             };
 
-            csvConfiguration = new Configuration();            
+            csvConfiguration = new Configuration();
             csvConfiguration.TypeConverterOptionsCache.AddOptions<DateTimeOffset>(dateTimeOffsetOptions);
         }
 
@@ -28,7 +29,7 @@ namespace FuncBlobs.Csv
             using (var csvWriter = new CsvWriter(writer, csvConfiguration))
             {
                 csvWriter.WriteRecords(readings);
-            }                
+            }
         }
 
         public List<ThermostatReading> FromCsv(TextReader reader)
