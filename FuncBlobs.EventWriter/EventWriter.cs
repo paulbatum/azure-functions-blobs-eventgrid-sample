@@ -6,10 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using FuncBlobs.Formats;
 using FuncBlobs.Models;
+using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Azure.WebJobs.ServiceBus;
-using Microsoft.ServiceBus.Messaging;
+using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
@@ -25,20 +25,20 @@ namespace FuncBlobs.EventWriter
         [FunctionName("EventWriter")]
         public static async Task Run(
             [EventHubTrigger("%HubName%", Connection = "EventsConnectionString")] EventData[] events,
-            [DocumentDB("pbatum-funcblob-store", "thermostat-logs",  ConnectionStringSetting = "CosmosConnectionString")] IAsyncCollector<string> thermostatLogOutput,
-            TraceWriter log)
+            [CosmosDB("pbatum-funcblob-store", "thermostat-logs", ConnectionStringSetting = "CosmosConnectionString")] IAsyncCollector<string> thermostatLogOutput,
+            ILogger log)
         {
-            foreach(var eventGridPayload in events)
+            foreach (var eventGridPayload in events)
             {
-                log.Info("EVENT");                
-                var payloadString = Encoding.UTF8.GetString(eventGridPayload.GetBytes());
+                log.LogInformation("EVENT");
+                var payloadString = Encoding.UTF8.GetString(eventGridPayload.Body.Array);
                 var eventArray = JToken.Parse(payloadString);
-                foreach(dynamic e in eventArray)
-                {                    
-                    string eventType = e.eventType;                    
+                foreach (dynamic e in eventArray)
+                {
+                    string eventType = e.eventType;
                     if (eventType != "Microsoft.Storage.BlobCreated")
                     {
-                        log.Warning($"Recieved event other than blob create, got: '{eventType}', skipping.");
+                        log.LogWarning($"Recieved event other than blob create, got: '{eventType}', skipping.");
                         continue;
                     }
 
@@ -46,7 +46,7 @@ namespace FuncBlobs.EventWriter
                     var filename = blobUri.Segments.Last();
                     if (filename.EndsWith(".csv") == false)
                     {
-                        log.Warning($"Recieved event for non-csv file '{filename}', skipping.");
+                        log.LogWarning($"Recieved event for non-csv file '{filename}', skipping.");
                         continue;
                     }
 
@@ -62,20 +62,20 @@ namespace FuncBlobs.EventWriter
                         CloudStorageAccount account = CloudStorageAccount.Parse(connectionString);
                         return account.CreateCloudBlobClient();
                     });
-                    
-                    var blob = await blobClient.GetBlobReferenceFromServerAsync(blobUri);
-                    using (var stream = await blob.OpenReadAsync())
-                    using (var reader = new StreamReader(stream))
-                    {                                                
-                        var csvUtils = new CsvUtils();
 
-                        ThermostatLog thermostatLog = ThermostatLog.ParseFileIdentifier(Path.GetFileNameWithoutExtension(filename));                        
+                    var blob = await blobClient.GetBlobReferenceFromServerAsync(blobUri);
+                    using (var stream = await blob.OpenReadAsync(AccessCondition.GenerateEmptyCondition(), new BlobRequestOptions(), new OperationContext()))
+                    using (var reader = new StreamReader(stream))
+                    {
+                        ThermostatLog thermostatLog = ThermostatLog.ParseFileIdentifier(Path.GetFileNameWithoutExtension(filename));
+
+                        var csvUtils = new CsvUtils();
                         thermostatLog.Readings = csvUtils.FromCsv(reader);
-                        string json = formatter.ToJson(thermostatLog);    
-                        
+                        string json = formatter.ToJson(thermostatLog);
+
                         await thermostatLogOutput.AddAsync(json);
                         await thermostatLogOutput.FlushAsync();
-                        log.Info($"Wrote {filename} to cosmos.");
+                        log.LogInformation($"Wrote {filename} to cosmos.");
                     }
                 }
             }
