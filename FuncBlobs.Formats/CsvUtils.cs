@@ -20,8 +20,9 @@ namespace FuncBlobs.Formats
                 Formats = new string[] { "u" }
             };
 
-            csvConfiguration = new Configuration();
+            csvConfiguration = new Configuration();            
             csvConfiguration.TypeConverterOptionsCache.AddOptions<DateTimeOffset>(dateTimeOffsetOptions);
+            csvConfiguration.AutoMap(typeof(ThermostatReading));            
         }
 
         public void ToCsv(TextWriter writer, IEnumerable<ThermostatReading> readings)

@@ -25,9 +25,11 @@ namespace FuncBlobs.EventWriter
         [FunctionName("EventWriter")]
         public static async Task Run(
             [EventHubTrigger("%HubName%", Connection = "EventsConnectionString")] EventData[] events,
-            [CosmosDB("pbatum-funcblob-store", "thermostat-logs", ConnectionStringSetting = "CosmosConnectionString")] IAsyncCollector<string> thermostatLogOutput,
+            [CosmosDB("%CosmosDatabaseName%", "%CosmosCollectionName%", ConnectionStringSetting = "CosmosConnectionString")] IAsyncCollector<string> thermostatLogOutput,
             ILogger log)
         {
+            var containerName = Environment.GetEnvironmentVariable("ContainerName") ?? "container01";
+
             foreach (var eventGridPayload in events)
             {
                 log.LogInformation("EVENT");
@@ -50,7 +52,15 @@ namespace FuncBlobs.EventWriter
                         continue;
                     }
 
+                    string subject = e.subject;
+                    if(subject.StartsWith($"/blobServices/default/containers/{containerName}") == false)
+                    {
+                        log.LogInformation($"Received event for unmonitored container, skipping.");
+                        continue;
+                    }
+
                     string topic = e.topic;
+                    
                     string accountName = topic.Substring(topic.LastIndexOf('/') + 1);
 
                     var blobClient = blobClients.GetOrAdd(accountName, (accName) =>

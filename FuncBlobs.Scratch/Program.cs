@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using FuncBlobs.Formats;
 using FuncBlobs.Models;
+using Microsoft.Azure.EventHubs;
+using Microsoft.Azure.EventHubs.Processor;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -16,9 +21,65 @@ namespace FuncBlobs.Scratch
         static void Main(string[] args)
         {
             var csvPath = WriteRandomCsv();
-            var jsonPath = WriteJsonFromCsv(csvPath);
+            //var jsonPath = WriteJsonFromCsv(csvPath);
             //ParseEventGridPayload();
+
+            //ProcessEventHub().Wait();
+            Console.WriteLine("Done.");
             Console.ReadLine();
+        }
+
+        public static async Task ProcessEventHub()
+        {
+            var localSettingsPath = @"D:\code\azure-functions-blobs-eventgrid-sample\FuncBlobs.EventWriter\local.settings.json";
+            dynamic settings = JObject.Parse(File.ReadAllText(localSettingsPath));
+
+            string hubName = settings.Values.HubName;
+            string eventHubConnectionString = settings.Values.EventsConnectionString;
+            string storageConnectionString = settings.Values.AzureWebJobsStorage;
+
+            var host = new EventProcessorHost(
+                hubName,
+                PartitionReceiver.DefaultConsumerGroupName,
+                eventHubConnectionString,
+                storageConnectionString,
+                "scratchcontainer");
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Console.WriteLine("Registering processor...");
+            await host.RegisterEventProcessorAsync<ScratchProcessor>();
+            stopwatch.Stop();
+
+            Console.WriteLine($"Registered. Took {stopwatch.ElapsedMilliseconds}ms.");
+        }
+
+        private class ScratchProcessor : IEventProcessor
+        {
+            public Task CloseAsync(PartitionContext context, CloseReason reason)
+            {                
+                return Task.CompletedTask;
+            }
+
+            public Task OpenAsync(PartitionContext context)
+            {
+                return Task.CompletedTask;
+            }
+
+            public Task ProcessErrorAsync(PartitionContext context, Exception error)
+            {
+                throw error;
+            }
+
+            public Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
+            {
+                foreach(var m in messages)
+                {
+                    Console.WriteLine(Encoding.UTF8.GetString(m.Body.Array));
+                }
+
+                return Task.CompletedTask;
+            }
         }
 
         public static void ParseEventGridPayload()
@@ -35,24 +96,8 @@ namespace FuncBlobs.Scratch
 
         public static string WriteRandomCsv()
         {
-            var log = new ThermostatLog
-            {
-                DeviceId = Guid.NewGuid(),
-                LogTimestamp = DateTime.UtcNow,
-            };
-            
             var random = new Random();
-
-            for(int i = 0; i < 24; i++)
-            {
-                log.Readings.Add(new ThermostatReading
-                {
-                    Timestamp = DateTimeOffset.UtcNow.AddDays(-1).AddHours(i),
-                    Temp = random.Next(10, 30) + random.NextDouble(),
-                    TempScale = "C",
-                    Humidity = random.Next(0, 100) + random.NextDouble()
-                });
-            }
+            var log = ThermostatLog.GenerateRandomLog(random);            
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), "temp", log.GetFileIdentifier() + ".csv");            
             var utils = new CsvUtils();

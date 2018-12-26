@@ -24,12 +24,34 @@ namespace FuncBlobs.Models
             return new ThermostatLog
             {
                 Id = fileIdentifier,
-                LogTimestamp = DateTimeOffset.ParseExact(components[0], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal),
-                DeviceId = Guid.Parse(components[1])
+                DeviceId = Guid.Parse(components[0]),
+                LogTimestamp = DateTimeOffset.ParseExact(components[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal),                
             };
         }
 
-        public string GetFileIdentifier() => $"{LogTimestamp:yyyyMMddHHmmss}_{DeviceId}";
+        public static ThermostatLog GenerateRandomLog(Random random)
+        {
+            var log = new ThermostatLog
+            {
+                DeviceId = Guid.NewGuid(),
+                LogTimestamp = DateTime.UtcNow,
+            };
+
+            for (int i = 0; i < 24; i++)
+            {
+                log.Readings.Add(new ThermostatReading
+                {
+                    Timestamp = DateTimeOffset.UtcNow.AddDays(-1).AddHours(i),
+                    Temp = random.Next(10, 30) + random.NextDouble(),
+                    TempScale = "C",
+                    Humidity = random.Next(0, 100) + random.NextDouble()
+                });
+            }
+
+            return log;
+        }
+
+        public string GetFileIdentifier() => $"{DeviceId}_{LogTimestamp:yyyyMMddHHmmss}";
         
     }
 }
