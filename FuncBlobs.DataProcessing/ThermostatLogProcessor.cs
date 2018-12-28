@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FuncBlobs.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -11,8 +15,19 @@ namespace FuncBlobs.DataProcessing
 {
     public static class ThermostatLogProcessor
     {
+
+        [FunctionName("negotiate")]
+        public static SignalRConnectionInfo GetSignalRInfo(
+            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+            [SignalRConnectionInfo(HubName = "readings", ConnectionStringSetting = "AzureSignalRConnectionString")] SignalRConnectionInfo connectionInfo)
+        {
+            return connectionInfo;
+        }
+
+
+
         [FunctionName("ThermostatLogProcessor")]
-        public static void Run(
+        public static async Task Run(
             [CosmosDBTrigger(
                 databaseName: "%ThermostatLogDatabaseName%",
                 collectionName: "%ThermostatLogCollectionName%",
@@ -21,6 +36,7 @@ namespace FuncBlobs.DataProcessing
                 LeaseCollectionPrefix = "%ThermostatLogLeasePrefix%",
                 CreateLeaseCollectionIfNotExists = true,
                 StartFromBeginning = false)] IReadOnlyList<Document> input, 
+            [SignalR(HubName = "readings", ConnectionStringSetting = "AzureSignalRConnectionString")] IAsyncCollector<SignalRMessage> signalRMessages,
             ILogger log)
         {
             foreach (var doc in input)
@@ -30,13 +46,17 @@ namespace FuncBlobs.DataProcessing
                 var avg = thermostatLog.Readings.Select(x => x.Temp).Average();                
                 var max = thermostatLog.Readings.Select(x => x.Temp).Max();
 
-                log.LogInformation($"{thermostatLog.DeviceId}, MinTemp: {min:F2}, AvgTemp: {avg:F2}, MaxTemp: {max:F2}");
-            }
+                var readingString = $"{thermostatLog.DeviceId}, MinTemp: {min:F2}, AvgTemp: {avg:F2}, MaxTemp: {max:F2}";
+                log.LogInformation(readingString);
 
-            //foreach (var thermostatLog in input)
-            //{
-            //    log.LogInformation($"{thermostatLog.DeviceId}, {thermostatLog.LogTimestamp}, AvgTemp: {thermostatLog.Readings.Select(x => x.Temp).Average()}");
-            //}
+                var message = new SignalRMessage
+                {
+                    Target = "newReading",
+                    Arguments = new[] { readingString }
+                };
+
+                await signalRMessages.AddAsync(message);                
+            }
         }
     }
 }
