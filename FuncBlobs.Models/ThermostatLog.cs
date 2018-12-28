@@ -37,12 +37,14 @@ namespace FuncBlobs.Models
                 LogTimestamp = DateTime.UtcNow,
             };
 
+            var baseline = random.Next(10, 30);
+
             for (int i = 0; i < 24; i++)
-            {
+            {                
                 log.Readings.Add(new ThermostatReading
                 {
                     Timestamp = DateTimeOffset.UtcNow.AddDays(-1).AddHours(i),
-                    Temp = random.Next(10, 30) + random.NextDouble(),
+                    Temp = baseline + random.Next(-5, 5) + random.NextDouble(),
                     TempScale = "C",
                     Humidity = random.Next(0, 100) + random.NextDouble()
                 });

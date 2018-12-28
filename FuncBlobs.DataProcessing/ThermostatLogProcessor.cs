@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
+using FuncBlobs.Models;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace FuncBlobs.DataProcessing
 {
@@ -20,11 +23,20 @@ namespace FuncBlobs.DataProcessing
                 StartFromBeginning = false)] IReadOnlyList<Document> input, 
             ILogger log)
         {
-            if (input != null && input.Count > 0)
+            foreach (var doc in input)
             {
-                log.LogInformation("Documents modified " + input.Count);
-                log.LogInformation("First document Id " + input[0].Id);
+                var thermostatLog = JsonConvert.DeserializeObject<ThermostatLog>(doc.ToString());
+                var min = thermostatLog.Readings.Select(x => x.Temp).Min();
+                var avg = thermostatLog.Readings.Select(x => x.Temp).Average();                
+                var max = thermostatLog.Readings.Select(x => x.Temp).Max();
+
+                log.LogInformation($"{thermostatLog.DeviceId}, MinTemp: {min:F2}, AvgTemp: {avg:F2}, MaxTemp: {max:F2}");
             }
+
+            //foreach (var thermostatLog in input)
+            //{
+            //    log.LogInformation($"{thermostatLog.DeviceId}, {thermostatLog.LogTimestamp}, AvgTemp: {thermostatLog.Readings.Select(x => x.Temp).Average()}");
+            //}
         }
     }
 }
