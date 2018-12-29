@@ -2,7 +2,7 @@
   "profiles": {
     "FuncBlobs.DataProcessing": {
       "commandName": "Project",
-      "commandLineArgs": "host start --port 56844"
+      "commandLineArgs": "host start --pause-on-error"
     }
   }
 }

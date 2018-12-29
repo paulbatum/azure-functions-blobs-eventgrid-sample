@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "FuncBlobs.LoadGenerator": {
+    "FuncBlobs.EventWriter": {
       "commandName": "Project",
       "commandLineArgs": "host start --pause-on-error"
     }

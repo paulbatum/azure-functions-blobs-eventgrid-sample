@@ -103,7 +103,7 @@
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-      connection.on('newMessage', newMessage);
+      connection.on('newReading', newMessage);
       connection.onclose(() => console.log('disconnected'));
 
       console.log('connecting...');

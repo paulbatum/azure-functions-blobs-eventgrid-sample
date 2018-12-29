@@ -46,13 +46,13 @@ namespace FuncBlobs.DataProcessing
                 var avg = thermostatLog.Readings.Select(x => x.Temp).Average();                
                 var max = thermostatLog.Readings.Select(x => x.Temp).Max();
 
-                var readingString = $"{thermostatLog.DeviceId}, MinTemp: {min:F2}, AvgTemp: {avg:F2}, MaxTemp: {max:F2}";
-                log.LogInformation(readingString);
+                var readingString = $"MinTemp: {min:F2}, AvgTemp: {avg:F2}, MaxTemp: {max:F2}";
+                log.LogInformation($"{thermostatLog.DeviceId}, {readingString}");
 
                 var message = new SignalRMessage
                 {
                     Target = "newReading",
-                    Arguments = new[] { readingString }
+                    Arguments = new[] { new { sender = thermostatLog.DeviceId.ToString(), text = readingString } }
                 };
 
                 await signalRMessages.AddAsync(message);                
