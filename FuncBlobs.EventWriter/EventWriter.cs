@@ -36,25 +36,37 @@ namespace FuncBlobs.EventWriter
         {
             var exceptions = new List<Exception>();
 
-            foreach (EventData eventGridPayload in events)
-            {
-                // Safe to assume that our event hub will only have UTF8 messages
-                var messageBody = Encoding.UTF8.GetString(eventGridPayload.Body.Array, eventGridPayload.Body.Offset, eventGridPayload.Body.Count);
-
+            foreach (EventData eventData in events)
+            {               
                 try
-                {                    
-                    var eventGridEvents = subscriber.DeserializeEventGridEvents(messageBody);
-                    await ProcessEvents(eventGridEvents, thermostatLogOutput, log);
+                {
+                    await ProcessEventHubMessage(eventData, thermostatLogOutput, log);
                 }
-                catch(Exception e)
+                catch(EventProcessingException eventException)
                 {
                     // We need to keep processing the rest of the batch - deadletter this particular failure and continue
-                    await deadLetterOutput.AddAsync(messageBody);                    
-                    exceptions.Add(e);
-                }                
+                    await deadLetterOutput.AddAsync(eventException.DecodedEventUTF8);                    
+                    exceptions.Add(eventException);
+                }                                
             }
 
             exceptions.ThrowIfAny();
+        }
+
+        private static async Task ProcessEventHubMessage(EventData eventData, IAsyncCollector<string> thermostatLogOutput, ILogger log)
+        {
+            // Assume that our event hub will only have UTF8 messages
+            var messageBody = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
+
+            try
+            {
+                var eventGridEvents = subscriber.DeserializeEventGridEvents(messageBody);
+                await ProcessEvents(eventGridEvents, thermostatLogOutput, log);
+            }
+            catch(Exception e)
+            {
+                throw new EventProcessingException("Unexpected error occured while processing event.", e, messageBody);
+            }
         }
 
         private static async Task ProcessEvents(IEnumerable<EventGridEvent> eventGridEvents, IAsyncCollector<string> thermostatLogOutput, ILogger log)
@@ -113,6 +125,15 @@ namespace FuncBlobs.EventWriter
             }
 
 
+        }
+    }
+
+    public class EventProcessingException : ApplicationException
+    {
+        public string DecodedEventUTF8 { get; private set; }
+        public EventProcessingException(string message, Exception innerException, string decodedEvent) : base(message, innerException)
+        {
+            this.DecodedEventUTF8 = decodedEvent;
         }
     }
 
